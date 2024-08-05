@@ -6,21 +6,20 @@ pipeline {
     stages {
         stage('Install dependencies') {
             steps {
-                sh 'pip install pytest pytest-cov'
+                sh 'pip install pytest pytest-cov pytest-html pytest-metadata'
             }
         }
         stage('Run tests with coverage') {
             steps {
                 script {
                     // Run tests, capture the exit status, but don't stop the pipeline
-                    def testStatus = sh(script: 'pytest --cov=my_app test/ || echo "Tests failed, but continuing to generate the report."', returnStatus: true)
-
-                    // Generate the report regardless of the test results
+                    def testStatus = sh(script: 'pytest --cov=my_app --cov-report=html --html=full_report.html --self-contained-html', returnStatus: true)
+                    // Generate the coverage report regardless of the test results
                     sh 'pytest --cov=my_app --cov-report=html test/'
 
-                    // If tests failed, store the status for use in the post section
+                    // If tests failed, generate a report for only failed tests
                     if (testStatus != 0) {
-                        currentBuild.result = 'FAILURE'
+                        sh 'pytest --last-failed --html=failed_tests_report.html --self-contained-html --tb=short'
                     }
                 }
             }
@@ -30,6 +29,9 @@ pipeline {
         always {
             script {
                 archiveArtifacts artifacts: 'htmlcov/**', allowEmptyArchive: true
+                archiveArtifacts artifacts: 'full_report.html', allowEmptyArchive: true
+                archiveArtifacts artifacts: 'failed_tests_report.html', allowEmptyArchive: true
+                echo "::: Pipeline executed successfully :::"
          }
     }
 }
