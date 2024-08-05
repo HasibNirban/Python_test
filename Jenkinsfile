@@ -25,21 +25,11 @@ pipeline {
                 }
             }
         }
-        stage('Archive the HTML report') {
-            always{
-                steps {
-                    archiveArtifacts artifacts: 'htmlcov/**', allowEmptyArchive: true
-                }
-            }
-        }
     }
     post {
         always {
-            echo 'Pipeline executed successfully (regardless of test results).'
-        }
-        failure {
-            // Additional actions can be taken on failure, if needed
-            echo 'Some tests failed, and the build is marked as FAILURE.'
-        }
+            script {
+                archiveArtifacts artifacts: 'htmlcov/**', allowEmptyArchive: true
+         }
     }
 }
