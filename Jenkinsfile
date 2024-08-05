@@ -18,7 +18,7 @@ pipeline {
 
                     // If tests failed, generate a report for only failed tests
                     if (testStatus != 0) {
-                        sh 'pytest --last-failed --html=failed_tests_report.html --self-contained-html --tb=short'
+                        sh 'pytest --last-failed --html=failed_tests_report.html --self-contained-html --tb=long'
                     }
                 }
             }
