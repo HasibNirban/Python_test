@@ -12,9 +12,7 @@ pipeline{
         stage('Run tests with coverage'){
             steps{
                  script {
-                   
                         sh 'pytest --continue-on-collection-errors --cov=my_app test/' || echo "Tests failed, but continuing to generate the report."
-                    
                 }   
             }
         }
