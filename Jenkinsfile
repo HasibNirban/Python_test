@@ -13,24 +13,28 @@ pipeline {
             steps {
                 script {
                     // Run tests but continue even if there are failures
-                    sh 'pytest --continue-on-collection-errors --cov=my_app test/ || echo "Tests failed, but continuing to generate the report."'
+                    sh 'pytest --cov=my_app --junitxml=results.xml test/ || echo "Tests failed, but continuing to generate the report."'
                 }
             }
         }
         stage('Generate HTML report') {
             steps {
-                sh 'pytest --continue-on-collection-errors --cov=my_app --cov-report=html test/'
+                // Generate the report even if tests have failed
+                sh 'pytest --cov=my_app --cov-report=html --junitxml=results.xml test/'
             }
         }
-        stage('Archive the HTML report') {
+        stage('Archive the HTML report and test results') {
             steps {
-                archiveArtifacts artifacts: 'htmlcov/**', allowEmptyArchive: true
+                archiveArtifacts artifacts: 'htmlcov/**, results.xml', allowEmptyArchive: true
             }
         }
     }
     post {
         always {
             echo 'Pipeline executed successfully'
+        }
+        failure {
+            echo 'There were test failures.'
         }
     }
 }
