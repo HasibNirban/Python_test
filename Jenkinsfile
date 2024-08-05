@@ -6,7 +6,7 @@ pipeline {
     stages {
         stage('Install dependencies') {
             steps {
-                sh 'pip install pytest pytest-cov'
+                sh 'pip install pytest pytest-cov pytest-html pytest-metadata'
             }
         }
         stage('Run tests with coverage') {
@@ -15,6 +15,7 @@ pipeline {
                     // Run tests, capture the exit status, but don't stop the pipeline
                     def testStatus = sh(script: 'pytest --cov=my_app --cov-report=html test/', returnStatus: true)
 
+                    // If tests failed, generate a report for only failed tests
                     if (testStatus != 0) {
                         echo "Some Tests failed, but the artifacts will be synced."
                         currentBuild.result = 'FAILURE'
