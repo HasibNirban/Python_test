@@ -12,29 +12,34 @@ pipeline {
         stage('Run tests with coverage') {
             steps {
                 script {
-                    // Run tests but continue even if there are failures
-                    sh 'pytest --cov=my_app --junitxml=results.xml test/ || echo "Tests failed, but continuing to generate the report."'
+                    // Run tests, capture the exit status, but don't stop the pipeline
+                    def testStatus = sh(script: 'pytest --cov=my_app test/ || echo "Tests failed, but continuing to generate the report."', returnStatus: true)
+
+                    // Generate the report regardless of the test results
+                    sh 'pytest --cov=my_app --cov-report=html test/'
+
+                    // If tests failed, store the status for use in the post section
+                    if (testStatus != 0) {
+                        currentBuild.result = 'FAILURE'
+                    }
                 }
             }
         }
-        stage('Generate HTML report') {
-            steps {
-                // Generate the report even if tests have failed
-                sh 'pytest --cov=my_app --cov-report=html --junitxml=results.xml test/'
-            }
-        }
-        stage('Archive the HTML report and test results') {
-            steps {
-                archiveArtifacts artifacts: 'htmlcov/**, results.xml', allowEmptyArchive: true
+        stage('Archive the HTML report') {
+            always{
+                steps {
+                    archiveArtifacts artifacts: 'htmlcov/**', allowEmptyArchive: true
+                }
             }
         }
     }
     post {
         always {
-            echo 'Pipeline executed successfully'
+            echo 'Pipeline executed successfully (regardless of test results).'
         }
         failure {
-            echo 'There were test failures.'
+            // Additional actions can be taken on failure, if needed
+            echo 'Some tests failed, and the build is marked as FAILURE.'
         }
     }
 }
